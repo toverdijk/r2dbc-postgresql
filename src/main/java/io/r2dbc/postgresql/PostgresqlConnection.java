@@ -236,14 +236,7 @@ final class PostgresqlConnection implements io.r2dbc.postgresql.api.PostgresqlCo
     @Override
     public PostgresqlStatement createStatement(String sql) {
         Assert.requireNonNull(sql, "sql must not be null");
-
-        if (SimpleQueryPostgresqlStatement.supports(sql)) {
-            return new SimpleQueryPostgresqlStatement(this.resources, sql);
-        } else if (ExtendedQueryPostgresqlStatement.supports(sql)) {
-            return new ExtendedQueryPostgresqlStatement(this.resources, sql);
-        } else {
-            throw new IllegalArgumentException(String.format("Statement '%s' cannot be created. This is often due to the presence of both multiple statements and parameters at the same time.", sql));
-        }
+        return new io.r2dbc.postgresql.PostgresqlStatement(this.resources, sql);
     }
 
     /**

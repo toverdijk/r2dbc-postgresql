@@ -19,12 +19,14 @@ import java.util.stream.Collectors;
  */
 
 public class TokenizedStatement {
-    private String sql;
-    private List<Token> tokens;
+    private final String sql;
+    private final List<Token> tokens;
+    private final int parameterCount;
 
     public TokenizedStatement(String sql, List<Token> tokens) {
         this.tokens = tokens;
         this.sql = sql;
+        this.parameterCount = readParameterCount(tokens);
     }
 
     public String getSql() {
@@ -35,35 +37,8 @@ public class TokenizedStatement {
         return tokens;
     }
 
-    public boolean hasParameters() {
-        return tokens.stream().anyMatch((t) -> t.getType() == TokenType.PARAMETER);
-    }
-
     public int getParameterCount() {
-        List<Integer> parameterTokens = tokens.stream()
-                .filter(t -> t.getType() == TokenType.PARAMETER)
-                .map(t -> {
-                    try {
-                        return Integer.parseInt(t.getValue().substring(1));
-                    } catch (NumberFormatException | IndexOutOfBoundsException e) {
-                        throw new IllegalArgumentException("Illegal parameter token: " + t.getValue());
-                    }
-                })
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-        int current = 1;
-        for (Integer i : parameterTokens) {
-            if (i != current) {
-                throw new IllegalArgumentException("Missing parameter number $" + i);
-            }
-            current++;
-        }
-        return parameterTokens.size();
-    }
-
-    public boolean hasDefaultTokenValueIgnoreCase(String value) {
-        return tokens.stream().anyMatch((t) -> t.getType() == TokenType.DEFAULT && t.getValue().equalsIgnoreCase(value));
+        return parameterCount;
     }
 
     @Override
@@ -89,5 +64,28 @@ public class TokenizedStatement {
         return "Statement{" +
                 "tokens=" + tokens +
                 '}';
+    }
+
+    private static int readParameterCount(List<Token> tokens) {
+        List<Integer> parameterTokens = tokens.stream()
+                .filter(t -> t.getType() == TokenType.PARAMETER)
+                .map(t -> {
+                    try {
+                        return Integer.parseInt(t.getValue().substring(1));
+                    } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                        throw new IllegalArgumentException("Illegal parameter token: " + t.getValue());
+                    }
+                })
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        int current = 1;
+        for (Integer i : parameterTokens) {
+            if (i != current) {
+                throw new IllegalArgumentException("Missing parameter number $" + i);
+            }
+            current++;
+        }
+        return parameterTokens.size();
     }
 }

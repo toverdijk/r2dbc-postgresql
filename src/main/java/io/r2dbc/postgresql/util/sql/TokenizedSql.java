@@ -19,12 +19,16 @@ package io.r2dbc.postgresql.util.sql;
 import java.util.List;
 
 public class TokenizedSql {
-    private String sql;
-    private List<TokenizedStatement> statements;
+    private final String sql;
+    private final List<TokenizedStatement> statements;
+    private final int statementCount;
+    private final int parameterCount;
 
     public TokenizedSql(String sql, List<TokenizedStatement> statements) {
         this.sql = sql;
         this.statements = statements;
+        this.statementCount = statements.size();
+        this.parameterCount = statements.stream().mapToInt(TokenizedStatement::getParameterCount).sum();
     }
 
     public List<TokenizedStatement> getStatements() {
@@ -32,11 +36,11 @@ public class TokenizedSql {
     }
 
     public int getStatementCount() {
-        return statements.size();
+        return this.statementCount;
     }
 
-    public int getParameterCount(){
-        return statements.stream().mapToInt(TokenizedStatement::getParameterCount).sum();
+    public int getParameterCount() {
+        return this.parameterCount;
     }
 
     public String getSql() {
