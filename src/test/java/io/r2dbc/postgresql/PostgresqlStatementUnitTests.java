@@ -112,13 +112,13 @@ final class PostgresqlStatementUnitTests {
     @Test
     void bindNullWrongIdentifierFormat() {
         assertThatExceptionOfType(NoSuchElementException.class).isThrownBy(() -> this.statement.bindNull("foo", Integer.class))
-                .withMessage("\"foo\" is not a valid identifier");
+            .withMessage("\"foo\" is not a valid identifier");
     }
 
     @Test
     void bindWrongIdentifierFormat() {
         assertThatExceptionOfType(NoSuchElementException.class).isThrownBy(() -> this.statement.bind("foo", ""))
-                .withMessage("\"foo\" is not a valid identifier");
+            .withMessage("\"foo\" is not a valid identifier");
     }
 
     @Test
@@ -288,21 +288,21 @@ final class PostgresqlStatementUnitTests {
     @Test
     void releasesArgumentsOnCancel() {
         Client client = TestClient.builder()
-                .expectRequest(
-                        new CompositeFrontendMessage(new Bind("B_0", Collections.singletonList(FORMAT_BINARY), Collections.singletonList(TEST.buffer(4).writeInt(100)), Collections.emptyList(), "test-name"),
-                                new Describe("B_0", ExecutionType.PORTAL), new Execute("B_0", 0),
-                                new Close("B_0", ExecutionType.PORTAL),
-                                Sync.INSTANCE))
-                .thenRespond(
-                        new ErrorResponse(Collections.emptyList()))
-                .build();
+            .expectRequest(
+                new CompositeFrontendMessage(new Bind("B_0", Collections.singletonList(FORMAT_BINARY), Collections.singletonList(TEST.buffer(4).writeInt(100)), Collections.emptyList(), "test-name"),
+                    new Describe("B_0", ExecutionType.PORTAL), new Execute("B_0", 0),
+                    new Close("B_0", ExecutionType.PORTAL),
+                    Sync.INSTANCE))
+            .thenRespond(
+                new ErrorResponse(Collections.emptyList()))
+            .build();
 
         AtomicBoolean hasReleased = new AtomicBoolean();
 
         MockCodecs codecs = MockCodecs.builder()
-                .encoding(100, new EncodedParameter(FORMAT_BINARY, INT4.getObjectId(), Flux.just(TEST.buffer(4).writeInt(100))))
-                .encoding(200, new EncodedParameter(FORMAT_BINARY, INT4.getObjectId(), Flux.just(TEST.buffer(4).writeInt(100)).doOnSubscribe(it -> hasReleased.set(true))))
-                .build();
+            .encoding(100, new EncodedParameter(FORMAT_BINARY, INT4.getObjectId(), Flux.just(TEST.buffer(4).writeInt(100))))
+            .encoding(200, new EncodedParameter(FORMAT_BINARY, INT4.getObjectId(), Flux.just(TEST.buffer(4).writeInt(100)).doOnSubscribe(it -> hasReleased.set(true))))
+            .build();
 
         PortalNameSupplier portalNameSupplier = new LinkedList<>(Arrays.asList("B_0", "B_1"))::remove;
         ConnectionResources context = MockContext.builder().client(client).codecs(codecs).portalNameSupplier(portalNameSupplier).build();

@@ -27,7 +27,7 @@ import reactor.test.StepVerifier;
 import reactor.util.function.Tuples;
 
 /**
- * Integration tests for {@link ExtendedQueryPostgresqlStatement}.
+ * Integration tests for {@link PostgresqlStatement}.
  */
 class PostgresqlStatementIntegrationTests extends AbstractIntegrationTests {
 
@@ -215,37 +215,38 @@ class PostgresqlStatementIntegrationTests extends AbstractIntegrationTests {
             this.connection.rollbackTransaction().block();
         }
     }
+
     @Test
     void shouldRunMultipleQueriesInSingleStatement() {
 
         this.connection.createStatement("SELECT 1;SELECT val FROM test")
-                .fetchSize(0).execute()
-                .flatMap(it -> it.map((row, rowMetadata) -> Tuples.of(row.get(0), rowMetadata.getColumnMetadata(0).getName())))
-                .as(StepVerifier::create)
-                .expectNext(Tuples.of(1, "?column?"), Tuples.of("a", "val"),Tuples.of("a", "val"), Tuples.of("b", "val"), Tuples.of("c", "val"), Tuples.of("c", "val"))
-                .verifyComplete();
+            .fetchSize(0).execute()
+            .flatMap(it -> it.map((row, rowMetadata) -> Tuples.of(row.get(0), rowMetadata.getColumnMetadata(0).getName())))
+            .as(StepVerifier::create)
+            .expectNext(Tuples.of(1, "?column?"), Tuples.of("a", "val"), Tuples.of("a", "val"), Tuples.of("b", "val"), Tuples.of("c", "val"), Tuples.of("c", "val"))
+            .verifyComplete();
     }
 
     @Test
-    void shouldRunQueryWithParameterAndDollarQuote(){
+    void shouldRunQueryWithParameterAndDollarQuote() {
         Flux.from(this.connection.createStatement("SELECT $$a$$, $1")
-                .fetchSize(1)
-                .bind("$1", "b").execute())
-                .flatMap(it -> it.map((row, rowMetadata) -> Tuples.of(row.get(0), row.get(1))))
-                .as(StepVerifier::create)
-                .expectNext(Tuples.of("a",  "b"))
-                .verifyComplete();
+            .fetchSize(1)
+            .bind("$1", "b").execute())
+            .flatMap(it -> it.map((row, rowMetadata) -> Tuples.of(row.get(0), row.get(1))))
+            .as(StepVerifier::create)
+            .expectNext(Tuples.of("a", "b"))
+            .verifyComplete();
     }
 
     @Test
-    void shouldRunQueryWithParameterAndQuotedDollarSign(){
+    void shouldRunQueryWithParameterAndQuotedDollarSign() {
         Flux.from(this.connection.createStatement("SELECT '$', $1")
-                .fetchSize(1)
-                .bind("$1", "b").execute())
-                .flatMap(it -> it.map((row, rowMetadata) -> Tuples.of(row.get(0), row.get(1))))
-                .as(StepVerifier::create)
-                .expectNext(Tuples.of("$",  "b"))
-                .verifyComplete();
+            .fetchSize(1)
+            .bind("$1", "b").execute())
+            .flatMap(it -> it.map((row, rowMetadata) -> Tuples.of(row.get(0), row.get(1))))
+            .as(StepVerifier::create)
+            .expectNext(Tuples.of("$", "b"))
+            .verifyComplete();
     }
 
 }

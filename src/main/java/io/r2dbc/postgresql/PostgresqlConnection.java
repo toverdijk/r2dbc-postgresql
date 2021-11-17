@@ -86,7 +86,7 @@ final class PostgresqlConnection implements io.r2dbc.postgresql.api.PostgresqlCo
         this.connectionContext = client.getContext();
         this.codecs = Assert.requireNonNull(codecs, "codecs must not be null");
         this.isolationLevel = Assert.requireNonNull(isolationLevel, "isolationLevel must not be null");
-        this.validationQuery = new SimpleQueryPostgresqlStatement(this.resources, "SELECT 1").fetchSize(0).execute().flatMap(PostgresqlResult::getRowsUpdated);
+        this.validationQuery = new io.r2dbc.postgresql.PostgresqlStatement(this.resources, "SELECT 1").fetchSize(0).execute().flatMap(PostgresqlResult::getRowsUpdated);
     }
 
     Client getClient() {

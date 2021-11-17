@@ -13,8 +13,10 @@ class BasicPostgresqlSqlLexerTest {
 
     @Nested
     class SingleStatementTests {
+
         @Nested
         class SingleTokenTests {
+
             @Test
             void singleQuotedStringIsTokenized() {
                 assertSingleStatementEqualsCompleteToken("'Test'", TokenType.STRING_CONSTANT);
@@ -54,6 +56,7 @@ class BasicPostgresqlSqlLexerTest {
             void windowsMultiLineCStyleCommentIsTokenizedAsSingleToken() {
                 assertSingleStatementEqualsCompleteToken("/*Test\r\n Test*/", TokenType.COMMENT);
             }
+
             @Test
             void unixMultiLineCStyleCommentIsTokenizedAsSingleToken() {
                 assertSingleStatementEqualsCompleteToken("/*Test\n Test*/", TokenType.COMMENT);
@@ -63,7 +66,6 @@ class BasicPostgresqlSqlLexerTest {
             void digitIsTokenizedAsDefaultToken() {
                 assertSingleStatementEqualsCompleteToken("1", TokenType.DEFAULT);
             }
-
 
             @Test
             void alphaIsTokenizedAsDefaultToken() {
@@ -88,6 +90,7 @@ class BasicPostgresqlSqlLexerTest {
             void assertSingleStatementEqualsCompleteToken(String sql, TokenType token) {
                 assertSingleStatementEquals(sql, new Token(token, sql));
             }
+
         }
 
         @Nested
@@ -141,60 +144,62 @@ class BasicPostgresqlSqlLexerTest {
             @Test
             void defaultTokenIsEndedBySpecialCharacter() {
                 assertSingleStatementEquals("abc[",
-                        new Token(TokenType.DEFAULT, "abc"),
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "["));
+                    new Token(TokenType.DEFAULT, "abc"),
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "["));
             }
 
             @Test
             void defaultTokenIsEndedByOperatorCharacter() {
                 assertSingleStatementEquals("abc-",
-                        new Token(TokenType.DEFAULT, "abc"),
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "-"));
+                    new Token(TokenType.DEFAULT, "abc"),
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "-"));
             }
 
             @Test
             void defaultTokenIsEndedByStatementEndCharacter() {
                 assertSingleStatementEquals("abc;",
-                        new Token(TokenType.DEFAULT, "abc"),
-                        new Token(TokenType.STATEMENT_END, ";"));
+                    new Token(TokenType.DEFAULT, "abc"),
+                    new Token(TokenType.STATEMENT_END, ";"));
             }
 
             @Test
             void defaultTokenIsEndedByQuoteCharacter() {
                 assertSingleStatementEquals("abc\"def\"",
-                        new Token(TokenType.DEFAULT, "abc"),
-                        new Token(TokenType.QUOTED_IDENTIFIER, "\"def\""));
+                    new Token(TokenType.DEFAULT, "abc"),
+                    new Token(TokenType.QUOTED_IDENTIFIER, "\"def\""));
             }
 
             @Test
             void parameterTokenIsEndedByQuoteCharacter() {
                 assertSingleStatementEquals("$1+",
-                        new Token(TokenType.PARAMETER, "$1"),
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "+"));
+                    new Token(TokenType.PARAMETER, "$1"),
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "+"));
             }
 
             @Test
             void parameterIsRecognizedBetweenSpecialCharacters() {
                 assertSingleStatementEquals("($1)",
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "("),
-                        new Token(TokenType.PARAMETER, "$1"),
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, ")")
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "("),
+                    new Token(TokenType.PARAMETER, "$1"),
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, ")")
                 );
             }
 
             @Test
             void lineCommentIsEndedAtNewline() {
                 assertSingleStatementEquals("--abc\ndef",
-                        new Token(TokenType.COMMENT, "--abc"),
-                        new Token(TokenType.DEFAULT, "def"));
+                    new Token(TokenType.COMMENT, "--abc"),
+                    new Token(TokenType.DEFAULT, "def"));
             }
+
             @Test
             void multipleOperatorsAreSeparatelyTokenized() {
                 assertSingleStatementEquals("**",
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "*"),
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "*")
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "*"),
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "*")
                 );
             }
+
         }
 
         @Nested
@@ -203,15 +208,15 @@ class BasicPostgresqlSqlLexerTest {
             @Test
             void simpleSelectStatementIsTokenized() {
                 assertSingleStatementEquals("SELECT * FROM /* A Comment */ table WHERE \"SELECT\" = $1",
-                        new Token(TokenType.DEFAULT, "SELECT"),
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "*"),
-                        new Token(TokenType.DEFAULT, "FROM"),
-                        new Token(TokenType.COMMENT, "/* A Comment */"),
-                        new Token(TokenType.DEFAULT, "table"),
-                        new Token(TokenType.DEFAULT, "WHERE"),
-                        new Token(TokenType.QUOTED_IDENTIFIER, "\"SELECT\""),
-                        new Token(TokenType.SPECIAL_OR_OPERATOR, "="),
-                        new Token(TokenType.PARAMETER, "$1")
+                    new Token(TokenType.DEFAULT, "SELECT"),
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "*"),
+                    new Token(TokenType.DEFAULT, "FROM"),
+                    new Token(TokenType.COMMENT, "/* A Comment */"),
+                    new Token(TokenType.DEFAULT, "table"),
+                    new Token(TokenType.DEFAULT, "WHERE"),
+                    new Token(TokenType.QUOTED_IDENTIFIER, "\"SELECT\""),
+                    new Token(TokenType.SPECIAL_OR_OPERATOR, "="),
+                    new Token(TokenType.PARAMETER, "$1")
                 );
             }
 
@@ -223,6 +228,7 @@ class BasicPostgresqlSqlLexerTest {
             TokenizedStatement statement = tokenizedSql.getStatements().get(0);
             assertEquals(new TokenizedStatement(sql, Arrays.asList(tokens)), statement);
         }
+
     }
 
     @Nested
@@ -237,27 +243,27 @@ class BasicPostgresqlSqlLexerTest {
             TokenizedStatement statementB = statements.get(1);
 
             assertEquals(new TokenizedStatement("DELETE * FROM X;",
-                            Arrays.asList(
-                                    new Token(TokenType.DEFAULT, "DELETE"),
-                                    new Token(TokenType.SPECIAL_OR_OPERATOR, "*"),
-                                    new Token(TokenType.DEFAULT, "FROM"),
-                                    new Token(TokenType.DEFAULT, "X"),
-                                    new Token(TokenType.STATEMENT_END, ";")
-                            )),
-                    statementA
+                    Arrays.asList(
+                        new Token(TokenType.DEFAULT, "DELETE"),
+                        new Token(TokenType.SPECIAL_OR_OPERATOR, "*"),
+                        new Token(TokenType.DEFAULT, "FROM"),
+                        new Token(TokenType.DEFAULT, "X"),
+                        new Token(TokenType.STATEMENT_END, ";")
+                    )),
+                statementA
             );
 
             assertEquals(new TokenizedStatement("SELECT 1;",
-                            Arrays.asList(
-                                    new Token(TokenType.DEFAULT, "SELECT"),
-                                    new Token(TokenType.DEFAULT, "1"),
-                                    new Token(TokenType.STATEMENT_END, ";")
-                            )),
-                    statementB
+                    Arrays.asList(
+                        new Token(TokenType.DEFAULT, "SELECT"),
+                        new Token(TokenType.DEFAULT, "1"),
+                        new Token(TokenType.STATEMENT_END, ";")
+                    )),
+                statementB
             );
-
 
         }
 
     }
+
 }

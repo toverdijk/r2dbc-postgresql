@@ -1,7 +1,3 @@
-package io.r2dbc.postgresql.util.sql;
-
-import java.util.List;
-import java.util.stream.Collectors;
 /*
  * Copyright 2021 the original author or authors.
  *
@@ -17,6 +13,11 @@ import java.util.stream.Collectors;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package io.r2dbc.postgresql.util.sql;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class TokenizedStatement {
     private final String sql;
