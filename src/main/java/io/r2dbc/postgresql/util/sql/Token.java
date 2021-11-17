@@ -17,7 +17,9 @@
 package io.r2dbc.postgresql.util.sql;
 
 public class Token {
+
     private TokenType type;
+
     private String value;
 
     public Token(TokenType type, String value) {
@@ -35,12 +37,18 @@ public class Token {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Token token = (Token) o;
 
-        if (type != token.type) return false;
+        if (type != token.type) {
+            return false;
+        }
         return value.equals(token.value);
     }
 
@@ -54,9 +62,9 @@ public class Token {
     @Override
     public String toString() {
         return "Token{" +
-                "type=" + type +
-                ", value=" + value +
-                '}';
+            "type=" + type +
+            ", value=" + value +
+            '}';
     }
 
 }

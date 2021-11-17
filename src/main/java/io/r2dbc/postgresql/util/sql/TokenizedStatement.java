@@ -1,7 +1,3 @@
-package io.r2dbc.postgresql.util.sql;
-
-import java.util.List;
-import java.util.stream.Collectors;
 /*
  * Copyright 2021 the original author or authors.
  *
@@ -18,9 +14,17 @@ import java.util.stream.Collectors;
  * limitations under the License.
  */
 
+package io.r2dbc.postgresql.util.sql;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class TokenizedStatement {
+
     private final String sql;
+
     private final List<Token> tokens;
+
     private final int parameterCount;
 
     public TokenizedStatement(String sql, List<Token> tokens) {
@@ -43,12 +47,18 @@ public class TokenizedStatement {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         TokenizedStatement that = (TokenizedStatement) o;
 
-        if (!sql.equals(that.sql)) return false;
+        if (!sql.equals(that.sql)) {
+            return false;
+        }
         return tokens.equals(that.tokens);
     }
 
@@ -62,23 +72,23 @@ public class TokenizedStatement {
     @Override
     public String toString() {
         return "Statement{" +
-                "tokens=" + tokens +
-                '}';
+            "tokens=" + tokens +
+            '}';
     }
 
     private static int readParameterCount(List<Token> tokens) {
         List<Integer> parameterTokens = tokens.stream()
-                .filter(t -> t.getType() == TokenType.PARAMETER)
-                .map(t -> {
-                    try {
-                        return Integer.parseInt(t.getValue().substring(1));
-                    } catch (NumberFormatException | IndexOutOfBoundsException e) {
-                        throw new IllegalArgumentException("Illegal parameter token: " + t.getValue());
-                    }
-                })
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
+            .filter(t -> t.getType() == TokenType.PARAMETER)
+            .map(t -> {
+                try {
+                    return Integer.parseInt(t.getValue().substring(1));
+                } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                    throw new IllegalArgumentException("Illegal parameter token: " + t.getValue());
+                }
+            })
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
         int current = 1;
         for (Integer i : parameterTokens) {
             if (i != current) {
@@ -88,4 +98,5 @@ public class TokenizedStatement {
         }
         return parameterTokens.size();
     }
+
 }

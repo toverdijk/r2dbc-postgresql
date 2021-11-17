@@ -39,7 +39,12 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
@@ -93,10 +98,6 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
     public PostgresqlStatement bind(int index, Object value) {
         Assert.requireNonNull(value, "value must not be null");
 
-        if(index >= tokenizedSql.getParameterCount()){
-            throw new UnsupportedOperationException(String.format("Cannot bind parameter %d, statement has %d parameters", index, this.tokenizedSql.getParameterCount()));
-        }
-
         BindingLogger.logBind(this.connectionContext, index, value);
         getCurrentOrNewBinding().add(index, this.resources.getCodecs().encode(value));
         return this;
@@ -121,9 +122,9 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
     }
 
     @Nonnull
-    private Binding getCurrentOrNewBinding(){
+    private Binding getCurrentOrNewBinding() {
         Binding binding = bindings.peekLast();
-        if(binding == null){
+        if (binding == null) {
             Binding newBinding = new Binding(tokenizedSql.getParameterCount());
             bindings.add(newBinding);
             return newBinding;
@@ -145,18 +146,18 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
         Assert.requireNonNull(columns, "columns must not be null");
 
         boolean hasReturning = this.tokenizedSql.getStatements().stream()
-                .flatMap(s -> s.getTokens().stream())
-                .anyMatch(token -> (token.getType() == TokenType.DEFAULT)
-                        && (token.getValue().equalsIgnoreCase("RETURNING")));
+            .flatMap(s -> s.getTokens().stream())
+            .anyMatch(token -> (token.getType() == TokenType.DEFAULT)
+                && (token.getValue().equalsIgnoreCase("RETURNING")));
         if (hasReturning) {
             throw new IllegalStateException("Statement already includes RETURNING clause");
         }
         boolean isSupporting = this.tokenizedSql.getStatements().stream()
-                .flatMap(s -> s.getTokens().stream())
-                .anyMatch(e -> e.getType() == TokenType.DEFAULT
-                        && (e.getValue().equalsIgnoreCase("DELETE")
-                        || e.getValue().equalsIgnoreCase("INSERT")
-                        || e.getValue().equalsIgnoreCase("UPDATE")));
+            .flatMap(s -> s.getTokens().stream())
+            .anyMatch(e -> e.getType() == TokenType.DEFAULT
+                && (e.getValue().equalsIgnoreCase("DELETE")
+                || e.getValue().equalsIgnoreCase("INSERT")
+                || e.getValue().equalsIgnoreCase("UPDATE")));
 
         if (!isSupporting) {
             throw new IllegalStateException("Statement is not a DELETE, INSERT, or UPDATE command");
@@ -176,11 +177,11 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
     @Override
     public String toString() {
         return "PostgresqlStatement{" +
-                "bindings=" + this.bindings +
-                ", context=" + this.resources +
-                ", sql='" + this.tokenizedSql.getSql() + '\'' +
-                ", generatedColumns=" + Arrays.toString(this.generatedColumns) +
-                '}';
+            "bindings=" + this.bindings +
+            ", context=" + this.resources +
+            ", sql='" + this.tokenizedSql.getSql() + '\'' +
+            ", generatedColumns=" + Arrays.toString(this.generatedColumns) +
+            '}';
     }
 
     Binding getCurrentBinding() {
@@ -205,7 +206,7 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
 
         if (this.tokenizedSql.getParameterCount() != 0) {
             // Extended query protocol
-            if(this.bindings.size()==0){
+            if (this.bindings.size() == 0) {
                 throw new IllegalStateException("No parameters have been bound");
             }
 
@@ -225,30 +226,30 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
                 Sinks.Many<Binding> bindings = Sinks.many().unicast().onBackpressureBuffer();
                 AtomicBoolean canceled = new AtomicBoolean();
                 return bindings.asFlux()
-                        .map(it -> {
-                            Flux<BackendMessage> messages =
-                                    collectBindingParameters(it).flatMapMany(values -> ExtendedFlowDelegate.runQuery(this.resources, factory, sql, it, values, this.fetchSize)).doOnComplete(() -> tryNextBinding(iterator, bindings, canceled));
+                    .map(it -> {
+                        Flux<BackendMessage> messages =
+                            collectBindingParameters(it).flatMapMany(values -> ExtendedFlowDelegate.runQuery(this.resources, factory, sql, it, values, this.fetchSize)).doOnComplete(() -> tryNextBinding(iterator, bindings, canceled));
 
-                            return PostgresqlResult.toResult(this.resources, messages, factory);
-                        })
-                        .doOnCancel(() -> clearBindings(iterator, canceled))
-                        .doOnError(e -> clearBindings(iterator, canceled))
-                        .doOnSubscribe(it -> bindings.emitNext(iterator.next(), Sinks.EmitFailureHandler.FAIL_FAST));
+                        return PostgresqlResult.toResult(this.resources, messages, factory);
+                    })
+                    .doOnCancel(() -> clearBindings(iterator, canceled))
+                    .doOnError(e -> clearBindings(iterator, canceled))
+                    .doOnSubscribe(it -> bindings.emitNext(iterator.next(), Sinks.EmitFailureHandler.FAIL_FAST));
 
             }).cast(io.r2dbc.postgresql.api.PostgresqlResult.class);
         } else {
             // Simple Query protocol
             if (this.fetchSize != NO_LIMIT) {
                 return ExtendedFlowDelegate.runQuery(this.resources, factory, sql, Binding.EMPTY, Collections.emptyList(), this.fetchSize)
-                        .windowUntil(WINDOW_UNTIL)
-                        .map(messages -> PostgresqlResult.toResult(this.resources, messages, factory))
-                        .as(Operators::discardOnCancel);
-            }
-
-            return SimpleQueryMessageFlow.exchange(this.resources.getClient(), sql)
                     .windowUntil(WINDOW_UNTIL)
                     .map(messages -> PostgresqlResult.toResult(this.resources, messages, factory))
                     .as(Operators::discardOnCancel);
+            }
+
+            return SimpleQueryMessageFlow.exchange(this.resources.getClient(), sql)
+                .windowUntil(WINDOW_UNTIL)
+                .map(messages -> PostgresqlResult.toResult(this.resources, messages, factory))
+                .as(Operators::discardOnCancel);
         }
     }
 
@@ -272,15 +273,15 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
     private static Mono<List<ByteBuf>> collectBindingParameters(Binding binding) {
 
         return Flux.fromIterable(binding.getParameterValues())
-                .flatMap(f -> {
-                    if (f == EncodedParameter.NULL_VALUE) {
-                        return Flux.just(Bind.NULL_VALUE);
-                    } else {
-                        return Flux.from(f)
-                                .reduce(Unpooled.compositeBuffer(), (c, b) -> c.addComponent(true, b));
-                    }
-                })
-                .collectList();
+            .flatMap(f -> {
+                if (f == EncodedParameter.NULL_VALUE) {
+                    return Flux.just(Bind.NULL_VALUE);
+                } else {
+                    return Flux.from(f)
+                        .reduce(Unpooled.compositeBuffer(), (c, b) -> c.addComponent(true, b));
+                }
+            })
+            .collectList();
     }
 
     private void clearBindings(Iterator<Binding> iterator, AtomicBoolean canceled) {
@@ -294,4 +295,5 @@ final class PostgresqlStatement implements io.r2dbc.postgresql.api.PostgresqlSta
 
         this.bindings.forEach(Binding::clear);
     }
+
 }

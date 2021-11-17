@@ -20,12 +20,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.Character.*;
+import static java.lang.Character.isDigit;
+import static java.lang.Character.isWhitespace;
+import static java.lang.Character.toLowerCase;
 
 public class BasicPostgresqlSqlLexer {
+
     private static final char[] SPECIAL_AND_OPERATOR_CHARS = {
-            '+', '-', '*', '/', '<', '>', '=', '~', '!', '@', '#', '%', '^', '&', '|', '`', '?',
-            '(', ')', '[', ']', ',', ';', ':', '*', '.', '\'', '"'
+        '+', '-', '*', '/', '<', '>', '=', '~', '!', '@', '#', '%', '^', '&', '|', '`', '?',
+        '(', ')', '[', ']', ',', ';', ':', '*', '.', '\'', '"'
     };
 
     static {
@@ -109,7 +112,6 @@ public class BasicPostgresqlSqlLexer {
         }
         return new Token(TokenType.SPECIAL_OR_OPERATOR, sql.substring(beginIndex));
     }
-
 
     private static Token getDefaultToken(String sql, int beginIndex) {
         for (int i = beginIndex + 1; i < sql.length(); i++) {
@@ -220,4 +222,5 @@ public class BasicPostgresqlSqlLexer {
             return new Token(TokenType.QUOTED_IDENTIFIER, sql.substring(beginIndex, nextQuote + 1));
         }
     }
+
 }

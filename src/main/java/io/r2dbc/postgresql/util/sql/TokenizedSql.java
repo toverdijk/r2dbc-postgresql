@@ -19,9 +19,13 @@ package io.r2dbc.postgresql.util.sql;
 import java.util.List;
 
 public class TokenizedSql {
+
     private final String sql;
+
     private final List<TokenizedStatement> statements;
+
     private final int statementCount;
+
     private final int parameterCount;
 
     public TokenizedSql(String sql, List<TokenizedStatement> statements) {
@@ -46,4 +50,5 @@ public class TokenizedSql {
     public String getSql() {
         return sql;
     }
+
 }
